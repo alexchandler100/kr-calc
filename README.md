@@ -6,6 +6,7 @@ A program that computes the (reduced) **HOMFLY homology** for knots.
 * [Human-readable](results.pdf)
 * [Raw (JSON)](data/)
 
-## Installation guide
+## Visualization
 
-To be updated soon. 
+Take a look at the python notebooks in the notebooks directory to get visualizations of homology and see some data science approaches
+to studying the theory.
