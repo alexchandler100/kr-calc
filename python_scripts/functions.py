@@ -357,7 +357,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 
 
 #for planar knots we drop the z coordinate and plot just the xy and the value of the homology
-def plot_homology_planar(knot):  
+def plot_homology_planar(knot,gridlines=True):  
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
         gradings = homology.keys()
@@ -373,6 +373,12 @@ def plot_homology_planar(knot):
         # change default range
         ax[0].set_xlim((min(xs)-1, max(xs)+1))
         ax[0].set_ylim((min(ys)-1, max(ys)+1))
+        # Minor ticks
+        ax[0].set_xticks(np.arange(min(xs)-.5, max(xs)+1, 1), minor=True)
+        ax[0].set_yticks(np.arange(min(ys)-.5, max(ys)+1, 1), minor=True)
+        # Gridlines based on minor ticks
+        if gridlines:
+            ax[0].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         #computing the signature
         base = list(gradings)[0]
         signature = str(-(base[0]+base[1]+base[2]))
@@ -600,7 +606,7 @@ def lee_grading_dm1_nonplanar(knot):
     else:
         print('homfly homology is not known for '+str(knot))
 
-def plot_homology_nonplanar(knot):  
+def plot_homology_nonplanar(knot,gridlines=True):  
     if (compute_planar_support(knot)==2):
         homology = homfly_data[knot]
         gradings = homology.keys()
@@ -616,6 +622,12 @@ def plot_homology_nonplanar(knot):
         ys1 = [grading[1] for grading in gradings1]
         ax[0].set_xlim((min(xs1)-1, max(xs1)+1))
         ax[0].set_ylim((min(ys1)-1, max(ys1)+1))
+        # Minor ticks
+        ax[0].set_xticks(np.arange(min(xs1)-.5, max(xs1)+1, 1), minor=True)
+        ax[0].set_yticks(np.arange(min(ys1)-.5, max(ys1)+1, 1), minor=True)
+        # Gridlines based on minor ticks
+        if gridlines:
+            ax[0].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base1 = list(gradings1)[0]
         signature1 = str((base1[0]+base1[1]+base1[2]))
         ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = : '+signature1, 
@@ -655,6 +667,12 @@ def plot_homology_nonplanar(knot):
         ys2 = [grading[1] for grading in gradings2]
         ax[1].set_xlim((min(xs2)-1, max(xs2)+1))
         ax[1].set_ylim((min(ys2)-1, max(ys2)+1))
+        # Minor ticks
+        ax[1].set_xticks(np.arange(min(xs2)-.5, max(xs2)+1, 1), minor=True)
+        ax[1].set_yticks(np.arange(min(ys2)-.5, max(ys2)+1, 1), minor=True)
+        # Gridlines based on minor ticks
+        if gridlines:
+            ax[1].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base2 = list(gradings2)[0]
         signature2 = str((base2[0]+base2[1]+base2[2]))
         ax[1].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = : '+signature2, 
