@@ -1,0 +1,8 @@
+Girth-optimised link diagram (modified pd notation) [[6,2,7,1],[14,5,15,6],[24,14,1,13],[4,15,5,16],[16,24,17,23],[22,18,23,17],[12,22,13,21],[20,8,21,7],[18,12,19,11],[8,20,9,19],[3,10,4,11],[9,2,10,3]].
+Girth: 6.
+Done. Result:
+Rational reduced homology: t^-4(q^8) + t^-3(2q^4 + 2q^6) + t^-2(1 + 7q^2 + q^4) + t^-1(5q^-2 + 9) + (11q^-4 + 7q^-2) + t(2q^-8 + 15q^-6 + 2q^-4) + t^2(8q^-10 + 11q^-8) + t^3(10q^-12 + 5q^-10) + t^4(q^-16 + 8q^-14 + q^-12) + t^5(3q^-18 + 2q^-16) + t^6(q^-20)
+Total rank: 115.
+The homology is torsion-free.
+Run time in seconds: 3
+Memory consumption in megabytes: 10.8
