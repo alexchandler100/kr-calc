@@ -4,7 +4,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 pd.set_option('display.max_rows', 1000)
 os.chdir('/Users/alexchandler/kr-calc/csv_files/') #change to csv file directory
-knot_info = pd.read_csv('Knotinfo_data.csv', dtype='object')  
+knot_info = pd.read_csv('Knotinfo_data.csv', dtype='object')
 
 import sklearn
 import scipy
@@ -52,6 +52,15 @@ def convert_homology(dictionary):
         result[convert(key)]=dictionary[key]
     return result
 
+def convert_NS_DGR(tup):
+    return (tup[0],tup[1],int((tup[1]-tup[2])/2))
+
+def convert_homology_NS_DGR(dictionary):
+    result={}
+    for key in list(dictionary.keys()):
+        result[convert_NS_DGR(key)]=dictionary[key]
+    return result
+
 #still not sure if this is computing the right thing...
 def check_parity(knot):
     homology = homfly_data[knot]
@@ -80,9 +89,9 @@ def check_parity(knot):
     #print(a_and_t_dict)
     if obstructions==0:
         return 1.0
-    else: 
+    else:
         return 0.0
-         
+
 
 #determines if there are any nonzero homology groups in any odd gradings
 #input: homology as dictionary, e.g. check_odd(homfly_data['10_1'])
@@ -97,7 +106,7 @@ def check_odd(dictionary):
             return True
             break;
     return False
-        
+
 
 #returns a vector from point1 to point2
 def vector(point1,point2):
@@ -163,12 +172,12 @@ def compute_planar_support(knot):
         return planar_support_alt(homology)
     else:
         return 0
-    
+
 #this makes an interactive 3d plot for homology
 import plotly
 import plotly.graph_objs as go
 
-def plot_homology(knot):    
+def plot_homology(knot):
     homology = homfly_data[knot]
     gradings = homology.keys()
 
@@ -184,7 +193,7 @@ def plot_homology(knot):
             colors.append('green')
         else:
             colors.append('black')
-            
+
     #making sizes
     #making colors
     sizes=[]
@@ -207,13 +216,14 @@ def plot_homology(knot):
     # Render the plot.
     print('Reduced HOMFLY-PT Homology of '+knot)
     plotly.offline.iplot(plot_figure)
-    
+
+
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 
 
-    
+
 compute_planar_support_vect = np.vectorize(compute_planar_support)
 
 
@@ -232,7 +242,7 @@ def reduce_once(set_of_complexes):
                     temp_complx.append(complx[j]-1)
             possibilities.append(tuple(temp_complx))
     return possibilities
-    
+
 import math
 
 def all_reductions(cmplx):
@@ -242,7 +252,7 @@ def all_reductions(cmplx):
     for i in range(k):
         cc=reduce_once(cc)
     return list(set(cc))
-    
+
 def possible_homology_indices(cmplx):
     if len(cmplx)==1:
         return [0]
@@ -265,7 +275,7 @@ def lee_grading_d1(knot):
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
         gradings = homology.keys()
-        
+
         #computing chains for d1 differential
         d1_heights=list(set([g[0]+g[1] for g in gradings]))
         d1_heights.sort()
@@ -276,7 +286,7 @@ def lee_grading_d1(knot):
             gradings_at_height_i=[g for g in gradings if g[0]+g[1]==i]
             gradings_at_height_i.sort()
             for g in gradings_at_height_i:
-                d1_chains[i][g]=homfly_data[knot][g]   
+                d1_chains[i][g]=homfly_data[knot][g]
         #for key in d1_chains.keys():
             #print(key,d1_chains[key])
         #computing euler characteristics for d1 differential
@@ -289,7 +299,7 @@ def lee_grading_d1(knot):
             if euler_char**2==1:
                 #print(i)
                 d1_lee_height=i
-                
+
         #computing x,y location of unique position of homology with respect to d1,dm1
         chains = []
         for key in d1_chains[d1_lee_height]:
@@ -297,7 +307,7 @@ def lee_grading_d1(knot):
         #print(chains)     #prints chain complex before reduction
         #reduce chain complex
         possibilities = possible_homology_indices(chains)
-        keys=[] 
+        keys=[]
         for i in possibilities:
             keys.append(list(d1_chains[d1_lee_height].keys())[i])
         return keys
@@ -305,12 +315,12 @@ def lee_grading_d1(knot):
         print(str(knot)+' is not planar')
     else:
         print('homfly homology is not known for '+str(knot))
-        
+
 def lee_grading_dm1(knot):
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
         gradings = homology.keys()
-                
+
         #computing chains for dm1 differential
         dm1_heights=list(set([g[0]-g[1] for g in gradings]))
         dm1_heights.sort()
@@ -321,7 +331,7 @@ def lee_grading_dm1(knot):
             gradings_at_height_i=[g for g in gradings if g[0]-g[1]==i]
             gradings_at_height_i.sort()
             for g in gradings_at_height_i:
-                dm1_chains[i][g]=homfly_data[knot][g] 
+                dm1_chains[i][g]=homfly_data[knot][g]
         #for key in dm1_chains.keys():
             #print(key,dm1_chains[key])
         #computing euler characteristics for dm1 differential
@@ -341,7 +351,7 @@ def lee_grading_dm1(knot):
         #print(chains)
         #reduce chain complex
         possibilities = possible_homology_indices(chains)
-        keys=[] 
+        keys=[]
         for i in possibilities:
             keys.append(list(dm1_chains[dm1_lee_height].keys())[i])
         return keys
@@ -350,17 +360,26 @@ def lee_grading_dm1(knot):
     else:
         print('homfly homology is not known for '+str(knot))
 
-        
+
 
 from matplotlib.patches import Ellipse
 plt.rcParams.update({'figure.max_open_warning': 0})
 
 
 #for planar knots we drop the z coordinate and plot just the xy and the value of the homology
-def plot_homology_planar(knot,gridlines=True):  
+def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=True):
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
+        if convention=='DGR':
+            homology=convert_homology_NS_DGR(homology)
         gradings = homology.keys()
+        first = list(gradings)[0]
+        if convention=='NS':
+            delta = str(first[0]+first[1]+first[2])
+            deltastr = 'q + a + t'
+        elif convention=='DGR':
+            delta = str(int(-first[0]/2-first[1]+first[2]))
+            deltastr = '-q/2-a+t'
         #making markers as ranks of homology groups
         markers=[]
         for grading in gradings:
@@ -383,21 +402,22 @@ def plot_homology_planar(knot,gridlines=True):
         base = list(gradings)[0]
         signature = str(-(base[0]+base[1]+base[2]))
         #setting the title
-        ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nSignature: '+signature, 
+        ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+delta+' = '+deltastr,
                   aspect=1, xticks=range(min(xs)-1, max(xs)+2), yticks=range(min(ys)-1, max(ys)+2))
+        ax[0].set_xlabel('q')
+        ax[0].set_ylabel('a')
         #setting xscale and yscale to be equal
         plt.gca().set_aspect('equal', adjustable='box')
         #circling gradings containing d1 and dm1 homology
-
-        for grading in lee_grading_d1(knot):
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[0].add_patch(ellipse)
-
-        for grading in lee_grading_dm1(knot):
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[0].add_patch(ellipse)
+        if s_inv_circles_on:
+            for grading in lee_grading_d1(knot):
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[0].add_patch(ellipse)
+            for grading in lee_grading_dm1(knot):
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[0].add_patch(ellipse)
         #making colors depending on size of homology
         colors=[]
         for txt in markers:
@@ -429,32 +449,38 @@ def plot_homology_planar(knot,gridlines=True):
     else:
         print('homfly homology is not known for '+str(knot))
 
-    
+
     #plt.plot(xs, ys, markers)
     #for x, y in zip(xs, ys):
         #plt.text(x, y, markers, color="black", fontsize=12)
-        
 
 
-            
-        
+
+
+
 def compute_deltas(knot):
     if knot in homfly_data:
         homology = homfly_data[knot]
         return planar_support_alt(homology)
     else:
         return 0
-    
+
 compute_planar_support_vect = np.vectorize(compute_planar_support)
 
 #computes list of all delta gradings
-def delta(knot):
+def delta(knot,convention='NS'):
     if knot in homfly_data:
         homology = homfly_data[knot]
         deltas = []
-        for g in list(homology.keys()):
-            deltas.append(g[0]+g[1]+g[2])
-        return set(deltas)
+        if convention=='NS':
+            for g in list(homology.keys()):
+                deltas.append(g[0]+g[1]+g[2])
+            return set(deltas)
+        elif convention=='DGR':
+            homology=convert_homology_NS_DGR(homology)
+            for g in list(homology.keys()):
+                deltas.append(int(-g[0]/2-g[1]+g[2]))
+            return set(deltas)
     else:
         return 0
 
@@ -469,7 +495,7 @@ def lee_grading_d1_nonplanar(knot):
         deltas=list(delta(knot))
         gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
         gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
-        
+
         #compute possible gradings for first plane
         d1_heights1=list(set([g[0]+g[1] for g in gradings1]))
         d1_heights1.sort()
@@ -480,7 +506,7 @@ def lee_grading_d1_nonplanar(knot):
             gradings_at_height_i1=[g for g in gradings1 if g[0]+g[1]==i]
             gradings_at_height_i1.sort()
             for g in gradings_at_height_i1:
-                d1_chains1[i][g]=homfly_data[knot][g]   
+                d1_chains1[i][g]=homfly_data[knot][g]
         for i in d1_heights1:
             euler_char=0
             k=0
@@ -496,7 +522,7 @@ def lee_grading_d1_nonplanar(knot):
         except:
             pass
         possibilities1 = possible_homology_indices(chains1)
-        keys1=[] 
+        keys1=[]
         for i in possibilities1:
             keys1.append(list(d1_chains1[d1_lee_height1].keys())[i])
         #compute possible gradings for second plane
@@ -509,7 +535,7 @@ def lee_grading_d1_nonplanar(knot):
             gradings_at_height_i2=[g for g in gradings2 if g[0]+g[1]==i]
             gradings_at_height_i2.sort()
             for g in gradings_at_height_i2:
-                d1_chains2[i][g]=homfly_data[knot][g]   
+                d1_chains2[i][g]=homfly_data[knot][g]
         for i in d1_heights2:
             euler_char=0
             k=0
@@ -525,7 +551,7 @@ def lee_grading_d1_nonplanar(knot):
         except:
             pass
         possibilities2 = possible_homology_indices(chains2)
-        keys2=[] 
+        keys2=[]
         for i in possibilities2:
             keys2.append(list(d1_chains2[d1_lee_height2].keys())[i])
         return [keys1,keys2]
@@ -533,7 +559,7 @@ def lee_grading_d1_nonplanar(knot):
         print(str(knot)+' does not have planar support 2')
     else:
         print('homfly homology is not known for '+str(knot))
-        
+
 def lee_grading_dm1_nonplanar(knot):
     if (compute_planar_support(knot)==2):
         homology = homfly_data[knot]
@@ -541,7 +567,7 @@ def lee_grading_dm1_nonplanar(knot):
         deltas=list(delta(knot))
         gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
         gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
-                
+
         #computing gradings for first plane
         dm1_heights1=list(set([g[0]-g[1] for g in gradings1]))
         dm1_heights1.sort()
@@ -552,7 +578,7 @@ def lee_grading_dm1_nonplanar(knot):
             gradings_at_height_i1=[g for g in gradings1 if g[0]-g[1]==i]
             gradings_at_height_i1.sort()
             for g in gradings_at_height_i1:
-                dm1_chains1[i][g]=homfly_data[knot][g] 
+                dm1_chains1[i][g]=homfly_data[knot][g]
         for i in dm1_heights1:
             euler_char=0
             k=0
@@ -568,7 +594,7 @@ def lee_grading_dm1_nonplanar(knot):
         except:
             pass
         possibilities1 = possible_homology_indices(chains1)
-        keys1=[] 
+        keys1=[]
         for i in possibilities1:
             keys1.append(list(dm1_chains1[dm1_lee_height1].keys())[i])
         #computing gradings for second plane
@@ -581,7 +607,7 @@ def lee_grading_dm1_nonplanar(knot):
             gradings_at_height_i2=[g for g in gradings2 if g[0]-g[1]==i]
             gradings_at_height_i2.sort()
             for g in gradings_at_height_i2:
-                dm1_chains2[i][g]=homfly_data[knot][g] 
+                dm1_chains2[i][g]=homfly_data[knot][g]
         for i in dm1_heights2:
             euler_char=0
             k=0
@@ -597,7 +623,7 @@ def lee_grading_dm1_nonplanar(knot):
         except:
             pass
         possibilities2 = possible_homology_indices(chains2)
-        keys2=[] 
+        keys2=[]
         for i in possibilities2:
             keys2.append(list(dm1_chains2[dm1_lee_height2].keys())[i])
         return [keys1,keys2]
@@ -606,13 +632,22 @@ def lee_grading_dm1_nonplanar(knot):
     else:
         print('homfly homology is not known for '+str(knot))
 
-def plot_homology_nonplanar(knot,gridlines=True):  
+def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on=True):
     if (compute_planar_support(knot)==2):
         homology = homfly_data[knot]
+        if convention=='DGR':
+            homology=convert_homology_NS_DGR(homology)
         gradings = homology.keys()
-        deltas=list(delta(knot))
-        gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
-        gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
+        deltas=list(delta(knot,convention))
+        deltas.sort()
+        if convention=='NS':
+            gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
+            gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
+            deltastr = 'q + a + t'
+        elif convention=='DGR':
+            gradings1=[grad for grad in gradings if int(-grad[0]/2-grad[1]+grad[2])==deltas[0]]
+            gradings2=[grad for grad in gradings if int(-grad[0]/2-grad[1]+grad[2])==deltas[1]]
+            deltastr = '-q/2 - a + t'
         fig, ax = plt.subplots(1, 3, figsize=(10,10))
         #creating plot for first delta grading
         markers1=[]
@@ -625,22 +660,25 @@ def plot_homology_nonplanar(knot,gridlines=True):
         # Minor ticks
         ax[0].set_xticks(np.arange(min(xs1)-.5, max(xs1)+1, 1), minor=True)
         ax[0].set_yticks(np.arange(min(ys1)-.5, max(ys1)+1, 1), minor=True)
+        ax[0].set_xlabel('q')
+        ax[0].set_ylabel('a')
         # Gridlines based on minor ticks
         if gridlines:
             ax[0].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base1 = list(gradings1)[0]
         signature1 = str((base1[0]+base1[1]+base1[2]))
-        ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = : '+signature1, 
+        ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[0])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs1)-1, max(xs1)+2), yticks=range(min(ys1)-1, max(ys1)+2))
         plt.gca().set_aspect('equal', adjustable='box')
-        for grading in lee_grading_d1_nonplanar(knot)[0]:
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[0].add_patch(ellipse)
-        for grading in lee_grading_dm1_nonplanar(knot)[0]:
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[0].add_patch(ellipse)
+        if s_inv_circles_on:
+            for grading in lee_grading_d1_nonplanar(knot)[0]:
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[0].add_patch(ellipse)
+            for grading in lee_grading_dm1_nonplanar(knot)[0]:
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[0].add_patch(ellipse)
         colors1=[]
         for txt in markers1:
             if txt%6==1:
@@ -658,7 +696,7 @@ def plot_homology_nonplanar(knot,gridlines=True):
         for i, txt in enumerate(markers1):
             text_kwargs = dict(ha='center', va='center', fontsize=20, color=colors1[i])
             ax[0].text(xs1[i], ys1[i], txt, **text_kwargs)
-            
+
         #creating plot for second delta grading
         markers2=[]
         for grading in gradings2:
@@ -670,22 +708,25 @@ def plot_homology_nonplanar(knot,gridlines=True):
         # Minor ticks
         ax[1].set_xticks(np.arange(min(xs2)-.5, max(xs2)+1, 1), minor=True)
         ax[1].set_yticks(np.arange(min(ys2)-.5, max(ys2)+1, 1), minor=True)
+        ax[1].set_xlabel('q')
+        ax[1].set_ylabel('a')
         # Gridlines based on minor ticks
         if gridlines:
             ax[1].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base2 = list(gradings2)[0]
         signature2 = str((base2[0]+base2[1]+base2[2]))
-        ax[1].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = : '+signature2, 
+        ax[1].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[1])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs2)-1, max(xs2)+2), yticks=range(min(ys2)-1, max(ys2)+2))
         plt.gca().set_aspect('equal', adjustable='box')
-        for grading in lee_grading_d1_nonplanar(knot)[1]:
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[1].add_patch(ellipse)
-        for grading in lee_grading_dm1_nonplanar(knot)[1]:
-            ellipse = Ellipse(xy=(grading[0], grading[1]), 
-                           width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)    
-            ax[1].add_patch(ellipse)
+        if s_inv_circles_on:
+            for grading in lee_grading_d1_nonplanar(knot)[1]:
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[1].add_patch(ellipse)
+            for grading in lee_grading_dm1_nonplanar(knot)[1]:
+                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                               width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
+                ax[1].add_patch(ellipse)
         colors2=[]
         for txt in markers2:
             if txt%6==1:
@@ -703,7 +744,7 @@ def plot_homology_nonplanar(knot,gridlines=True):
         for i, txt in enumerate(markers2):
             text_kwargs = dict(ha='center', va='center', fontsize=20, color=colors2[i])
             ax[1].text(xs2[i], ys2[i], txt, **text_kwargs)
-            
+
         ax[2].set(title=knot, aspect=1, xticks=[], yticks=[])
         os.chdir('/Users/alexchandler/kr-calc') #change to python script directory
 
@@ -742,13 +783,13 @@ def detect_int(col):
         return True
     else:
         return False
-    
+
 def detect_float(col):
     if col.dtype=='float64':
         return True
     else:
         return False
-    
+
 def floatize(number):
     return float(number)
 
@@ -776,7 +817,7 @@ def convert_str_to_float(val):
             return float('NaN')
             boo=False
             break
-        
+
 def convert_small_or_Large(val):
     boo = True
     while boo:
@@ -806,19 +847,19 @@ def convert_L_space(val):
             return float('NaN')
             boo=False
             break
-        
+
 def float_to_boolean(flo):
     if flo==1.0:
         return True
     else:
         return False
-    
+
 #scores a model (inpute e.g. (all_knot_info_int, features, 'Size of Homology'))
 def model_score(dataframe,features, target, algo = 'linear', scoring = 'accuracy'):
     yyy=dataframe[target]
     XXX=dataframe[features]
     XXXscaler = preprocessing.StandardScaler().fit(XXX)
-    XXX_scaled = XXXscaler.transform(XXX) 
+    XXX_scaled = XXXscaler.transform(XXX)
     if algo=='linear':
         reg = LinearRegression()
     elif algo=='logistic':
@@ -855,7 +896,7 @@ def greedy(dataframe, features, subsetsize, target, algo = 'linear', scoring = '
 def is_unimodal(seq):
     M=seq.index(max(seq))
     return all(seq[i]<=seq[i+1] for i in range(M)) and all(seq[i]>=seq[i+1] for i in range(M+1,len(seq)-1))
-        
+
 
 def check_unimodal(knot):
     homology = homfly_data[knot]
