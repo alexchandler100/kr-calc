@@ -158,48 +158,46 @@ def planar_support_alt(homology):
     points = list(homology.keys())
     while len(points)>0:
         base_point=points[0]
-        points=[point for point in points if sum(list(point))!=sum(list(base_point))]
+        delta = sum(list(base_point))
+        points=[point for point in points if sum(list(point))!=delta]
         planes+=1
     return planes
-
-
 
 
 #0 just indicates that the knot is not in the homfly_data dataset
 def compute_planar_support(knot):
     if knot in homfly_data:
-        homology = homfly_data[knot]
-        return planar_support_alt(homology)
+        return planar_support_alt(homfly_data[knot])
     else:
         return 0
 
 #this makes an interactive 3d plot for homology
 import plotly
 import plotly.graph_objs as go
+import random
 
 def plot_homology(knot):
     homology = homfly_data[knot]
     gradings = homology.keys()
-
     # Configure Plotly to be rendered inline in the notebook.
     plotly.offline.init_notebook_mode()
-
     #making colors
     colors=[]
+    color_dict={}
+    for i in range(max(list(homology.values()))):
+        color_dict[i+1]=random.choices(range(256), k=3)
     for grading in gradings:
-        if homology[grading]>2:
-            colors.append('red')
-        elif homology[grading]==2:
-            colors.append('green')
-        else:
-            colors.append('black')
-
+        colors.append(color_dict[homology[grading]])
+        #if homology[grading]>2:
+            #colors.append('red')
+        #elif homology[grading]==2:
+            #colors.append('green')
+        #else:
+            #colors.append('black')
     #making sizes
-    #making colors
     sizes=[]
     for grading in gradings:
         sizes.append(3+3*homology[grading])
-
     # Configure the trace.
     trace = go.Scatter3d(
         x=[grading[0] for grading in gradings],
@@ -207,12 +205,67 @@ def plot_homology(knot):
         z=[grading[2] for grading in gradings],
         mode='markers',
         marker={'size': sizes,'opacity': 0.8,'color': colors})
-
+    deltas=list(set([grading[0]+grading[1]+grading[2] for grading in gradings]))
+    planes=[]
+    for delta in deltas:
+        xs=list(set([grading[0] for grading in gradings if grading[0]+grading[1]+grading[2]==delta]))
+        ys=list(set([grading[1] for grading in gradings if grading[0]+grading[1]+grading[2]==delta]))
+        x = np.outer(np.linspace(min(xs), max(xs), 30), np.ones(30))
+        y = np.outer(np.linspace(min(ys), max(ys), 30), np.ones(30)).copy().T
+        z = delta-x-y
+        planes.append(go.Surface(x=x, y=y, z=z, showscale=False, opacity=0.5))
     # Configure the layout.
     layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
     data = [trace]
-    plot_figure = go.Figure(data=data, layout=layout)
+    for plane in planes:
+        data.append(plane)
+    x_lines = list()
+    y_lines = list()
+    z_lines = list()
 
+    if len(deltas)==2:
+        deltas.sort()
+        delta1=deltas[0]
+        delta2=deltas[1]
+        d1gradings=[grading for grading in gradings if grading[0]+grading[1]+grading[2]==delta1]
+        d2gradings=[grading for grading in gradings if grading[0]+grading[1]+grading[2]==delta2]
+        pairs=[]
+        for grading1 in d1gradings:
+            for grading2 in d2gradings:
+                if grading2[0]==grading1[0]+4 and grading2[1]==grading1[1]-2 and grading2[2]==grading1[2]:
+                    x_lines.append(grading1[0])
+                    x_lines.append(grading2[0])
+                    x_lines.append(None)
+                    y_lines.append(grading1[1])
+                    y_lines.append(grading2[1])
+                    y_lines.append(None)
+                    z_lines.append(grading1[2])
+                    z_lines.append(grading2[2])
+                    z_lines.append(None)
+        trace_lines = go.Scatter3d(
+            x=x_lines,
+            y=y_lines,
+            z=z_lines,
+            line = dict(width = 2, color = 'rgb(200,0,100)'))
+        data.append(trace_lines)
+
+    annot_list=[]
+    for point in homology.keys():
+        annot_list.append(dict(
+            showarrow=False,
+            x=point[0],
+            y=point[1],
+            z=point[2],
+            text=str(homology[point]),
+            xanchor="left",
+            xshift=10,
+            opacity=0.7))
+    plot_figure = go.Figure(data=data, layout=layout)
+    plot_figure.update_layout(
+        scene=dict(
+            annotations=annot_list
+        ),
+        )
     # Render the plot.
     print('Reduced HOMFLY-PT Homology of '+knot)
     plotly.offline.iplot(plot_figure)
@@ -367,7 +420,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 
 
 #for planar knots we drop the z coordinate and plot just the xy and the value of the homology
-def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=True):
+def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=True,vars='qa'):
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
         if convention=='DGR':
@@ -379,7 +432,7 @@ def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=Tr
             deltastr = 'q + a + t'
         elif convention=='DGR':
             delta = str(int(-first[0]/2-first[1]+first[2]))
-            deltastr = '-q/2-a+t'
+            deltastr = '-q/2 - a + t_DGR'
         #making markers as ranks of homology groups
         markers=[]
         for grading in gradings:
@@ -409,7 +462,7 @@ def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=Tr
         #setting xscale and yscale to be equal
         plt.gca().set_aspect('equal', adjustable='box')
         #circling gradings containing d1 and dm1 homology
-        if s_inv_circles_on:
+        if s_inv_circles_on and vars=='qa' and convention == 'NS':
             for grading in lee_grading_d1(knot):
                 ellipse = Ellipse(xy=(grading[0], grading[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
@@ -418,6 +471,8 @@ def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=Tr
                 ellipse = Ellipse(xy=(grading[0], grading[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
                 ax[0].add_patch(ellipse)
+        elif s_inv_circles_on:
+            print("d_1 and d_-1 homology only implemented for convention=='NS' and vars='qa'")
         #making colors depending on size of homology
         colors=[]
         for txt in markers:
@@ -632,7 +687,7 @@ def lee_grading_dm1_nonplanar(knot):
     else:
         print('homfly homology is not known for '+str(knot))
 
-def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on=True):
+def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
     if (compute_planar_support(knot)==2):
         homology = homfly_data[knot]
         if convention=='DGR':
@@ -647,7 +702,7 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
         elif convention=='DGR':
             gradings1=[grad for grad in gradings if int(-grad[0]/2-grad[1]+grad[2])==deltas[0]]
             gradings2=[grad for grad in gradings if int(-grad[0]/2-grad[1]+grad[2])==deltas[1]]
-            deltastr = '-q/2 - a + t'
+            deltastr = '-q/2 - a + t_DGR'
         fig, ax = plt.subplots(1, 3, figsize=(10,10))
         #creating plot for first delta grading
         markers1=[]
@@ -655,6 +710,12 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
             markers1.append(homology[grading])
         xs1 = [grading[0] for grading in gradings1]
         ys1 = [grading[1] for grading in gradings1]
+        if vars =='qt':
+            xs1 = [grading[0] for grading in gradings1]
+            ys1 = [grading[2] for grading in gradings1]
+        elif vars =='at':
+            xs1 = [grading[1] for grading in gradings1]
+            ys1 = [grading[2] for grading in gradings1]
         ax[0].set_xlim((min(xs1)-1, max(xs1)+1))
         ax[0].set_ylim((min(ys1)-1, max(ys1)+1))
         # Minor ticks
@@ -670,7 +731,7 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
         ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[0])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs1)-1, max(xs1)+2), yticks=range(min(ys1)-1, max(ys1)+2))
         plt.gca().set_aspect('equal', adjustable='box')
-        if s_inv_circles_on:
+        if s_inv_circles_on and vars=='qa' and convention == 'NS':
             for grading in lee_grading_d1_nonplanar(knot)[0]:
                 ellipse = Ellipse(xy=(grading[0], grading[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
@@ -703,6 +764,12 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
             markers2.append(homology[grading])
         xs2 = [grading[0] for grading in gradings2]
         ys2 = [grading[1] for grading in gradings2]
+        if vars =='qt':
+            xs2 = [grading[0] for grading in gradings2]
+            ys2 = [grading[2] for grading in gradings2]
+        elif vars =='at':
+            xs2 = [grading[1] for grading in gradings2]
+            ys2 = [grading[2] for grading in gradings2]
         ax[1].set_xlim((min(xs2)-1, max(xs2)+1))
         ax[1].set_ylim((min(ys2)-1, max(ys2)+1))
         # Minor ticks
@@ -718,7 +785,7 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
         ax[1].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[1])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs2)-1, max(xs2)+2), yticks=range(min(ys2)-1, max(ys2)+2))
         plt.gca().set_aspect('equal', adjustable='box')
-        if s_inv_circles_on:
+        if s_inv_circles_on and vars=='qa' and convention == 'NS':
             for grading in lee_grading_d1_nonplanar(knot)[1]:
                 ellipse = Ellipse(xy=(grading[0], grading[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
@@ -727,6 +794,8 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
                 ellipse = Ellipse(xy=(grading[0], grading[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
                 ax[1].add_patch(ellipse)
+        elif s_inv_circles_on:
+            print('d_1 and d_-1 homology only implemented for vars="qa" and convention="NS"')
         colors2=[]
         for txt in markers2:
             if txt%6==1:
@@ -744,16 +813,23 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
         for i, txt in enumerate(markers2):
             text_kwargs = dict(ha='center', va='center', fontsize=20, color=colors2[i])
             ax[1].text(xs2[i], ys2[i], txt, **text_kwargs)
-
         ax[2].set(title=knot, aspect=1, xticks=[], yticks=[])
         os.chdir('/Users/alexchandler/kr-calc') #change to python script directory
-
         img = mpimg.imread('diagrams/'+knot+'.png')
         imgplot = ax[2].imshow(img)
     elif (compute_planar_support(knot)==0 or compute_planar_support(knot)>=3):
         print(str(knot)+' is not on two planes... this is not yet implemented')
     else:
         print('homfly homology is not known for '+str(knot))
+
+def plot_homology_2D(knot,convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
+    PS=compute_planar_support(knot)
+    if PS==1:
+        plot_homology_planar(knot,convention,gridlines,s_inv_circles_on,vars)
+    elif PS==2:
+        plot_homology_nonplanar(knot,convention,gridlines,s_inv_circles_on,vars)
+    else:
+        print('knot data is not in the database')
 
 #computes list of all delta gradings
 def size_of_homology(knot):
