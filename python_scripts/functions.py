@@ -548,9 +548,9 @@ def lee_grading_d1_nonplanar(knot):
         homology = homfly_data[knot]
         gradings = homology.keys()
         deltas=list(delta(knot))
+        deltas.sort()
         gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
         gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
-
         #compute possible gradings for first plane
         d1_heights1=list(set([g[0]+g[1] for g in gradings1]))
         d1_heights1.sort()
@@ -620,6 +620,7 @@ def lee_grading_dm1_nonplanar(knot):
         homology = homfly_data[knot]
         gradings = homology.keys()
         deltas=list(delta(knot))
+        deltas.sort()
         gradings1=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[0]]
         gradings2=[grad for grad in gradings if grad[0]+grad[1]+grad[2]==deltas[1]]
 
