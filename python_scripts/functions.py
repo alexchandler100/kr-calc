@@ -420,7 +420,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 
 
 #for planar knots we drop the z coordinate and plot just the xy and the value of the homology
-def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=True,vars='qa'):
+def plot_homology_planar(knot,save = False,convention='NS',gridlines=True,s_inv_circles_on=True,vars='qa'):
     if (compute_planar_support(knot)==1):
         homology = homfly_data[knot]
         if convention=='DGR':
@@ -498,6 +498,8 @@ def plot_homology_planar(knot,convention='NS',gridlines=True,s_inv_circles_on=Tr
         os.chdir('/Users/alexchandler/kr-calc') #change to python script directory
         img = mpimg.imread('diagrams/'+knot+'.png')
         imgplot = ax[1].imshow(img)
+        if save:
+            plt.savefig(knot+'.png')
         #plt.show()
     elif (compute_planar_support(knot)==0 or compute_planar_support(knot)>=2):
         print(str(knot)+' is not planar')
@@ -609,7 +611,14 @@ def lee_grading_d1_nonplanar(knot):
         keys2=[]
         for i in possibilities2:
             keys2.append(list(d1_chains2[d1_lee_height2].keys())[i])
-        return [keys1,keys2]
+        for ll in range(len(keys1)):
+            if keys1[ll][0]==-deltas[0]:
+                return keys1[ll]
+        for ll in range(len(keys2)):
+            if keys2[ll][0]==-deltas[1]:
+                return keys2[ll]
+        print('something is going wrong') #if nothing is returned by the above
+        #return [keys1,keys2]
     elif (compute_planar_support(knot)!=2):
         print(str(knot)+' does not have planar support 2')
     else:
@@ -682,13 +691,20 @@ def lee_grading_dm1_nonplanar(knot):
         keys2=[]
         for i in possibilities2:
             keys2.append(list(dm1_chains2[dm1_lee_height2].keys())[i])
-        return [keys1,keys2]
+        for ll in range(len(keys1)):
+            if keys1[ll][0]==deltas[0]:
+                return keys1[ll]
+        for ll in range(len(keys2)):
+            if keys2[ll][0]==deltas[1]:
+                return keys2[ll]
+        print('something is going wrong') #if nothing is returned by the above
+        ##return [keys1,keys2]
     elif (compute_planar_support(knot)!=2):
         print(str(knot)+' does not have planar support 2')
     else:
         print('homfly homology is not known for '+str(knot))
 
-def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
+def plot_homology_nonplanar(knot,save = False, convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
     if (compute_planar_support(knot)==2):
         homology = homfly_data[knot]
         if convention=='DGR':
@@ -705,6 +721,7 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
             gradings2=[grad for grad in gradings if int(-grad[0]/2-grad[1]+grad[2])==deltas[1]]
             deltastr = '-q/2 - a + t_DGR'
         fig, ax = plt.subplots(1, 3, figsize=(10,10))
+        fig.tight_layout()
         #creating plot for first delta grading
         markers1=[]
         for grading in gradings1:
@@ -729,18 +746,19 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
             ax[0].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base1 = list(gradings1)[0]
         signature1 = str((base1[0]+base1[1]+base1[2]))
-        ax[0].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[0])+' = '+deltastr,
+        ax[0].set(title='Reduced HOMFLY-PT \nHomology of '+knot+'\nDelta = '+str(deltas[0])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs1)-1, max(xs1)+2), yticks=range(min(ys1)-1, max(ys1)+2))
         plt.gca().set_aspect('equal', adjustable='box')
         if s_inv_circles_on and vars=='qa' and convention == 'NS':
-            for grading in lee_grading_d1_nonplanar(knot)[0]:
-                ellipse = Ellipse(xy=(grading[0], grading[1]),
+            grading_d1 = lee_grading_d1_nonplanar(knot)
+            grading_dm1 = lee_grading_dm1_nonplanar(knot)
+            if sum(grading_d1) == deltas[0]:
+                ellipse1 = Ellipse(xy=(grading_d1[0], grading_d1[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
-                ax[0].add_patch(ellipse)
-            for grading in lee_grading_dm1_nonplanar(knot)[0]:
-                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                ax[0].add_patch(ellipse1)
+                ellipse2 = Ellipse(xy=(grading_dm1[0], grading_dm1[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
-                ax[0].add_patch(ellipse)
+                ax[0].add_patch(ellipse2)
         colors1=[]
         for txt in markers1:
             if txt%6==1:
@@ -783,18 +801,19 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
             ax[1].grid(which='minor', color='gray', linestyle='dotted', linewidth=1)
         base2 = list(gradings2)[0]
         signature2 = str((base2[0]+base2[1]+base2[2]))
-        ax[1].set(title='Reduced HOMFLY-PT Homology of '+knot+'\nDelta = '+str(deltas[1])+' = '+deltastr,
+        ax[1].set(title='Reduced HOMFLY-PT \nHomology of '+knot+'\nDelta = '+str(deltas[1])+' = '+deltastr,
                   aspect=1, xticks=range(min(xs2)-1, max(xs2)+2), yticks=range(min(ys2)-1, max(ys2)+2))
         plt.gca().set_aspect('equal', adjustable='box')
         if s_inv_circles_on and vars=='qa' and convention == 'NS':
-            for grading in lee_grading_d1_nonplanar(knot)[1]:
-                ellipse = Ellipse(xy=(grading[0], grading[1]),
+            grading_d1 = lee_grading_d1_nonplanar(knot)
+            grading_dm1 = lee_grading_dm1_nonplanar(knot)
+            if sum(grading_d1) == deltas[1]:
+                ellipse1 = Ellipse(xy=(grading_d1[0], grading_d1[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
-                ax[1].add_patch(ellipse)
-            for grading in lee_grading_dm1_nonplanar(knot)[1]:
-                ellipse = Ellipse(xy=(grading[0], grading[1]),
+                ax[1].add_patch(ellipse1)
+                ellipse2 = Ellipse(xy=(grading_dm1[0], grading_dm1[1]),
                                width=1.4, height=1.4, edgecolor='r', fc='None', lw=2)
-                ax[1].add_patch(ellipse)
+                ax[1].add_patch(ellipse2)
         elif s_inv_circles_on:
             print('d_1 and d_-1 homology only implemented for vars="qa" and convention="NS"')
         colors2=[]
@@ -818,12 +837,14 @@ def plot_homology_nonplanar(knot,convention='NS',gridlines=True,s_inv_circles_on
         os.chdir('/Users/alexchandler/kr-calc') #change to python script directory
         img = mpimg.imread('diagrams/'+knot+'.png')
         imgplot = ax[2].imshow(img)
+        if save:
+            plt.savefig(knot+'.png')
     elif (compute_planar_support(knot)==0 or compute_planar_support(knot)>=3):
         print(str(knot)+' is not on two planes... this is not yet implemented')
     else:
         print('homfly homology is not known for '+str(knot))
 
-def plot_homology_2D(knot,convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
+def plot_homology_2D(knot, convention='NS',gridlines=True,s_inv_circles_on=True, vars='qa'):
     PS=compute_planar_support(knot)
     if PS==1:
         plot_homology_planar(knot,convention,gridlines,s_inv_circles_on,vars)
